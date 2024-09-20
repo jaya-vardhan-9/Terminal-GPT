@@ -40,38 +40,21 @@ def ensure_history_directory():
     if not os.path.exists(HISTORY_DIR):
         os.makedirs(HISTORY_DIR)
 
-def get_index():
-    """Load or initialize the index file."""
-    ensure_history_directory()
-    if os.path.exists(INDEX_FILE):
-        with open(INDEX_FILE, "r") as file:
-            return json.load(file)
-    return {"sessions": []}
-
-def update_index(session_id, file_path):
-    """Update the index file with a new session."""
-    index = get_index()
-    index["sessions"].append({"session_id": session_id, "file_path": file_path})
-    with open(INDEX_FILE, "w") as file:
-        json.dump(index, file)
 
 def get_session_filename(session_id):
     """Generate a filename for the given session ID within the history directory."""
     return os.path.join(HISTORY_DIR, f"{SESSION_FILE_PREFIX}{session_id}.json")
 
-def load_history(session_id):
-    """Load conversation history for a specific session."""
-    filename = get_session_filename(session_id)
-    if os.path.exists(filename):
-        with open(filename, "r") as file:
-            return json.load(file)
-    return [{"role": "system", "content": "You are a helpful assistant."}]
 
 def save_history(session_id, history):
     """Save conversation history for a specific session."""
     filename = get_session_filename(session_id)
+    # try:
     with open(filename, "w") as file:
         json.dump(history, file)
+    #     print(f"History saved to {filename}")
+    # except Exception as e:
+    #     print(f"Error saving history: {e}")
 
 def color_text(text, color_code):
     """Return the text wrapped in the appropriate color code."""
