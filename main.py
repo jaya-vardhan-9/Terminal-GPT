@@ -129,7 +129,7 @@ def interactive_prompt():
     print("Hey boss, welcome to Terminal GPT!")
 
     # Generate a unique session ID based on timestamp
-    session_id = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")
+    session_id = str(datetime.datetime.now().strftime("%Y-%m-%d_%H_%M"))
     
     # Track if the first question has been asked
     first_question_asked = False
@@ -173,6 +173,8 @@ def interactive_prompt():
             print("Failed to get a response. Please try again later.")
         
         # Save the updated history
+        # print(session_id,type(session_id))
+        # print('s_'+session_id.replace('-','')+'.json')
         save_history(session_id, history)
 
 if __name__ == "__main__":
