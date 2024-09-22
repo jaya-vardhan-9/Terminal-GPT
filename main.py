@@ -92,12 +92,12 @@ def print_colored_output(result, model):
     # Increment the model's response count for the next time
     model_response_count[model] += 1
 
-load_dotenv()
+load_dotenv("api_key.env")
 
 def generate_text(messages, model):
     """Generate a response from the specified model with conversation history."""
     try:
-        api_key=os.getenv('api_key')
+        api_key=os.getenv("API_KEY")
         if not api_key:
             raise ValueError("API Not Found")
         
