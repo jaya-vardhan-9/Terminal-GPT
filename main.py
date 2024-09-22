@@ -2,10 +2,13 @@ import os
 import json
 import datetime
 from groq import Groq
+from dotenv import load_dotenv
 
 INDEX_FILE = "history/index.json"
 SESSION_FILE_PREFIX = "session_"
 HISTORY_DIR = "history"
+
+
 
 # Model specifications with keywords
 MODEL_SPECIALIZATIONS = {
@@ -48,13 +51,22 @@ def get_session_filename(session_id):
 
 def save_history(session_id, history):
     """Save conversation history for a specific session."""
-    filename = get_session_filename(session_id)
-    # try:
+    filename = get_session_filename(session_id).replace(".json", ".txt")
+
     with open(filename, "w") as file:
-        json.dump(history, file)
-    #     print(f"History saved to {filename}")
-    # except Exception as e:
-    #     print(f"Error saving history: {e}")
+        for entry in history:
+            if entry["role"] == "assistant":
+                model_name = entry.get("model_name", "unknown_model")  # Assuming you store model name in history
+                response_time = datetime.datetime.now().strftime("%H:%M")
+                file.write(color_text(model_name, 32) + f" {response_time}\n")  # Green model name and time
+                file.write(entry["content"] + "\n")
+            elif entry["role"] == "user":
+                question = entry["content"]
+                file.write(color_text(question, 31) + "\n")  # Red question
+                # Optionally include prompt if needed
+                # prompt = entry.get("prompt", "No prompt")
+                # file.write(color_text(prompt, 34) + "\n")  # Blue prompt
+            file.write("\n" + "-" * 70 + "\n")  # Separator
 
 def color_text(text, color_code):
     """Return the text wrapped in the appropriate color code."""
@@ -80,10 +92,16 @@ def print_colored_output(result, model):
     # Increment the model's response count for the next time
     model_response_count[model] += 1
 
+load_dotenv()
+
 def generate_text(messages, model):
     """Generate a response from the specified model with conversation history."""
     try:
-        client = Groq(api_key="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")
+        api_key=os.getenv('api_key')
+        if not api_key:
+            raise ValueError("API Not Found")
+        
+        client = Groq(api_key=api_key)
         chat_completion = client.chat.completions.create(
             messages=messages,
             model=model
@@ -128,11 +146,11 @@ def interactive_prompt():
             first_question_asked = True
             # Generate the session filename with the first question
             session_filename = get_session_filename(f"{user_input[:50]}_{session_id}")  # Use a snippet of the first question
-            update_index(session_id, session_filename)
+            
             history = [{"role": "system", "content": "You are a helpful assistant."}]
         else:
             session_filename = get_session_filename(session_id)
-            history = load_history(session_id)
+            
 
         # Determine the model based on user input
         model = select_model_based_on_keyword(user_input)
