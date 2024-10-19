@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 from groq import Groq
+from dotenv import load_dotenv
 
 INDEX_FILE = "history/index.json"
 SESSION_FILE_PREFIX = "session_"
@@ -34,6 +35,30 @@ MODEL_COLOR_SHADES = {
 
 # Dictionary to track how many responses a model has generated
 model_response_count = {}
+
+def load_history(session_id):
+    """Load conversation history for a specific session."""
+    filename = get_session_filename(session_id)
+    if os.path.exists(filename):
+        with open(filename, "r") as file:
+            return json.load(file)
+    return [{"role": "system", "content": "You are a helpful assistant."}]
+
+def get_index():
+    """Load or initialize the index file."""
+    ensure_history_directory()
+    if os.path.exists(INDEX_FILE):
+        with open(INDEX_FILE, "r") as file:
+            return json.load(file)
+    return {"sessions": []}
+
+def update_index(session_id, file_path):
+    """Update the index file with a new session."""
+    index = get_index()
+    index["sessions"].append({"session_id": session_id, "file_path": file_path})
+    with open(INDEX_FILE, "w") as file:
+        json.dump(index, file)
+
 
 def ensure_history_directory():
     """Create the history directory if it doesn't exist."""
@@ -80,12 +105,12 @@ def print_colored_output(result, model):
     # Increment the model's response count for the next time
     model_response_count[model] += 1
 
-load_dotenv()
+load_dotenv("api_key.env")
 
 def generate_text(messages, model):
     """Generate a response from the specified model with conversation history."""
     try:
-        api_key=os.getenv('api_key')
+        api_key=os.getenv('API_KEY')
         if not api_key:
             raise ValueError("API Not Found")
         
